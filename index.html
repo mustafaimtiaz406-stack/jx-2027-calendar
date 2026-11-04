@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-boot="loading">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>JX Calendar</title>
+  <meta name="description" content="JX Calendar — a private, offline-first calendar. Your events stay on this device.">
+  <meta name="theme-color" content="#0F4D3A">
+  <meta name="color-scheme" content="light dark">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="JX Calendar">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    /* Pre-paint theme: applies the last-used theme before CSS paints to avoid a flash.
+       IndexedDB stays the source of truth; localStorage holds only this display hint. */
+    (function () {
+      var pref = 'system';
+      try { pref = localStorage.getItem('jx.themeHint') || 'system'; } catch (e) {}
+      var dark = pref === 'dark' || (pref === 'system' && window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    })();
+  </script>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6L6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6M6.5 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5l1-12.5M9.5 7V4.5h5V7"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 2.5l3 3-3 3"/><path d="M4 11.5v-1a5 5 0 0 1 5-5h11M7 21.5l-3-3 3-3"/><path d="M20 12.5v1a5 5 0 0 1-5 5H4"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15.5V4.5M7.5 9L12 4.5 16.5 9M5 19.5h14"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6L12 3z"/><path d="M8.8 12.2l2.2 2.2 4.3-4.4"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-icon" src="icons/icon-192.png" alt="" width="36" height="36" decoding="async">
+        <span class="brand-name">JX Calendar</span>
+      </div>
+      <span class="status-chip" id="offline-chip" hidden>Offline</span>
+    </header>
+
+    <div class="banner-stack" id="banners" aria-live="polite"></div>
+
+    <nav class="nav" aria-label="Main">
+      <a class="nav-item" href="#/today" data-route="today">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <span>Today</span>
+      </a>
+      <a class="nav-item" href="#/calendar" data-route="calendar">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <span>Calendar</span>
+      </a>
+      <a class="nav-item" href="#/tasks" data-route="tasks">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>
+        <span>Tasks</span>
+      </a>
+      <a class="nav-item" href="#/settings" data-route="settings">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <main class="main" id="main" tabindex="-1">
+      <section class="view view-today" data-view="today" hidden>
+        <div id="today-root"></div>
+      </section>
+
+      <section class="view view-calendar" data-view="calendar" hidden>
+        <div class="view-head">
+          <h1 class="view-title">Calendar</h1>
+          <div id="cal-tabs"></div>
+        </div>
+        <div id="cal-root"></div>
+      </section>
+
+      <section class="view view-tasks" data-view="tasks" hidden>
+        <div class="view-head tasks-head">
+          <h1 class="view-title">Tasks</h1>
+          <button type="button" class="btn btn-primary" data-act="add-task">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>New task
+          </button>
+        </div>
+        <div id="tasks-root"></div>
+      </section>
+
+      <section class="view" data-view="settings" hidden>
+        <h1 class="view-title">Settings</h1>
+
+        <form class="card" id="settings-form" novalidate>
+          <fieldset class="field">
+            <legend class="field-label">Appearance</legend>
+            <div class="segmented" role="radiogroup" aria-label="Appearance">
+              <label><input type="radio" name="theme" value="system"><span>System</span></label>
+              <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+              <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend class="field-label">Week starts on</legend>
+            <div class="segmented" role="radiogroup" aria-label="Week starts on">
+              <label><input type="radio" name="weekStart" value="monday"><span>Monday</span></label>
+              <label><input type="radio" name="weekStart" value="sunday"><span>Sunday</span></label>
+            </div>
+          </fieldset>
+          <p class="save-state" id="save-state" aria-live="polite"></p>
+        </form>
+
+        <section class="card export-card" aria-labelledby="export-h">
+          <h2 class="card-title export-title" id="export-h"><svg class="icon icon-title" aria-hidden="true"><use href="#i-calendar"></use></svg>Export calendar</h2>
+          <p class="export-text">Download your JX events and recurring schedules as an ICS file to import into another calendar app. This is a one-time export, not automatic synchronization.</p>
+          <ul class="export-list">
+            <li>Includes every event: one-time events, repeating series, and the dates you changed or cancelled.</li>
+            <li>Tasks are not included.</li>
+            <li>Times are exported exactly as entered (9:00 stays 9:00). The app you import into shows them in its own time zone.</li>
+            <li>Changes you make in JX later won’t update the imported copy. Export again if you need a fresh copy.</li>
+          </ul>
+          <button type="button" class="btn btn-primary btn-block export-btn" id="export-ics">
+            <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg><span>Export Calendar (.ics)</span>
+          </button>
+          <div class="export-result" id="export-result" role="status" aria-live="polite" hidden></div>
+        </section>
+
+        <section class="card backup-card" aria-labelledby="backup-h">
+          <h2 class="card-title export-title" id="backup-h"><svg class="icon icon-title" aria-hidden="true"><use href="#i-shield"></use></svg>Backup &amp; restore</h2>
+          <div class="br-block">
+            <h3 class="br-title">Back up</h3>
+            <p class="export-text">Save a complete copy of your JX Calendar data, including events, recurring schedules, exceptions, tasks and settings.</p>
+            <button type="button" class="btn btn-primary btn-block" id="backup-download">
+              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg><span>Download Backup (.json)</span>
+            </button>
+            <p class="br-note">The file contains your personal calendar. Keep it somewhere safe and private.</p>
+            <div class="export-result" id="backup-result" role="status" aria-live="polite" hidden></div>
+          </div>
+          <div class="br-block br-restore">
+            <h3 class="br-title">Restore</h3>
+            <p class="export-text">Select a previous JX backup to validate and restore your calendar data.</p>
+            <input type="file" id="restore-file" accept=".json,application/json" hidden>
+            <button type="button" class="btn btn-secondary btn-block" id="restore-pick" aria-describedby="restore-help">
+              <svg class="icon" aria-hidden="true"><use href="#i-upload"></use></svg><span>Restore from Backup</span>
+            </button>
+            <p class="br-note" id="restore-help">You’ll see what the backup contains before anything is changed.</p>
+            <div class="export-result" id="restore-result" role="status" aria-live="polite" hidden></div>
+          </div>
+        </section>
+
+        <div class="card">
+          <h2 class="card-title">Storage</h2>
+          <dl class="diag" id="diagnostics">
+            <dt>Data storage</dt><dd data-diag="storage">Checking…</dd>
+            <dt>Persistent storage</dt><dd data-diag="persist">Checking…</dd>
+            <dt>Offline use</dt><dd data-diag="sw">Checking…</dd>
+            <dt>App version</dt><dd data-diag="appVersion">—</dd>
+            <dt>Data format</dt><dd data-diag="schema">—</dd>
+          </dl>
+          <p class="note">Your data is stored only in this browser on this device. It is not synced to other devices or backed up automatically. Clearing this browser’s data, removing the app or using private browsing can erase it, so download a backup regularly.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+
+  <!-- Event form (create / edit) -->
+  <dialog id="event-form" class="sheet" aria-labelledby="event-form-title">
+    <form id="event-form-el" class="sheet-inner" novalidate>
+      <header class="sheet-head">
+        <h2 class="sheet-title" id="event-form-title">New event</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <div class="sheet-body">
+        <p class="form-summary" id="ef-summary" role="alert" hidden></p>
+        <p class="form-note" id="ef-mode-note" hidden><svg class="icon" aria-hidden="true"><use href="#i-repeat"></use></svg><span id="ef-mode-text"></span></p>
+
+        <div class="field">
+          <label class="label" for="ef-title">Title</label>
+          <input class="input input-lg" id="ef-title" name="title" type="text" maxlength="120" autocomplete="off"
+                 placeholder="e.g. Dentist appointment" aria-describedby="ef-title-err" required>
+          <p class="field-error" id="ef-title-err" hidden></p>
+        </div>
+
+        <label class="switch-row" for="ef-allday">
+          <span class="switch-label">All day</span>
+          <input type="checkbox" id="ef-allday" name="allDay" role="switch">
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+
+        <fieldset class="field when-group">
+          <legend class="label">Starts</legend>
+          <div class="when-row">
+            <input class="input" id="ef-startDate" name="startDate" type="date" aria-label="Start date" aria-describedby="ef-startDate-err" required>
+            <input class="input time-input" id="ef-startTime" name="startTime" type="time" aria-label="Start time" aria-describedby="ef-startTime-err">
+          </div>
+          <p class="field-error" id="ef-startDate-err" hidden></p>
+          <p class="field-error" id="ef-startTime-err" hidden></p>
+        </fieldset>
+
+        <fieldset class="field when-group">
+          <legend class="label">Ends</legend>
+          <div class="when-row">
+            <input class="input" id="ef-endDate" name="endDate" type="date" aria-label="End date" aria-describedby="ef-endDate-err" required>
+            <input class="input time-input" id="ef-endTime" name="endTime" type="time" aria-label="End time" aria-describedby="ef-endTime-err">
+          </div>
+          <p class="field-error" id="ef-endDate-err" hidden></p>
+          <p class="field-error" id="ef-endTime-err" hidden></p>
+        </fieldset>
+
+        <div class="field repeat-block" id="ef-repeat-block">
+          <label class="label" for="ef-freq">Repeat</label>
+          <div class="select-wrap">
+            <select class="input select" id="ef-freq" name="freq">
+              <option value="">Does not repeat</option>
+              <option value="DAILY">Daily</option>
+              <option value="WEEKLY">Weekly</option>
+              <option value="MONTHLY">Monthly</option>
+              <option value="YEARLY">Yearly</option>
+            </select>
+          </div>
+
+          <div class="repeat-options" id="ef-repeat-options" hidden>
+            <div class="repeat-row">
+              <label for="ef-interval" class="inline-label">Every</label>
+              <input class="input input-num" id="ef-interval" name="interval" type="number" inputmode="numeric" min="1" max="99" step="1" aria-describedby="ef-interval-err ef-interval-unit">
+              <span class="inline-label" id="ef-interval-unit">weeks</span>
+            </div>
+            <p class="field-error" id="ef-interval-err" hidden></p>
+
+            <fieldset class="sub-field" data-freq="WEEKLY">
+              <legend class="label">On these days</legend>
+              <div class="weekday-chips" id="ef-weekdays" aria-describedby="ef-weekdays-err"></div>
+              <p class="field-error" id="ef-weekdays-err" hidden></p>
+            </fieldset>
+
+            <fieldset class="sub-field" data-freq="MONTHLY">
+              <legend class="label">On</legend>
+              <div class="choice-row">
+                <input type="radio" id="ef-mtype-day" name="monthlyType" value="DAY">
+                <label for="ef-mtype-day" class="inline-label">Day</label>
+                <input class="input input-num" id="ef-monthday" name="monthDay" type="number" inputmode="numeric" min="1" max="31" aria-label="Day of the month">
+              </div>
+              <div class="choice-row">
+                <input type="radio" id="ef-mtype-ord" name="monthlyType" value="ORDINAL">
+                <label for="ef-mtype-ord" class="inline-label">The</label>
+                <select class="input select select-sm" id="ef-ordinal" name="ordinal" aria-label="Which week of the month">
+                  <option value="1">first</option><option value="2">second</option><option value="3">third</option><option value="4">fourth</option><option value="-1">last</option>
+                </select>
+                <select class="input select select-sm" id="ef-ordwd" name="ordWeekday" aria-label="Weekday"></select>
+              </div>
+              <p class="hint" id="ef-monthly-hint" hidden>Months without this day are skipped.</p>
+              <p class="field-error" id="ef-monthly-err" hidden></p>
+            </fieldset>
+
+            <fieldset class="sub-field" data-freq="YEARLY">
+              <legend class="label">On</legend>
+              <div class="when-row">
+                <select class="input select" id="ef-ymonth" name="yMonth" aria-label="Month"></select>
+                <input class="input input-num" id="ef-yday" name="yDay" type="number" inputmode="numeric" min="1" max="31" aria-label="Day">
+              </div>
+              <p class="hint" id="ef-yearly-hint" hidden>29 February only happens in leap years, so this event is skipped in other years.</p>
+              <p class="field-error" id="ef-yearly-err" hidden></p>
+            </fieldset>
+
+            <fieldset class="sub-field">
+              <legend class="label">Stops</legend>
+              <div class="choice-row">
+                <input type="radio" id="ef-end-never" name="endType" value="NEVER">
+                <label for="ef-end-never" class="inline-label">Never</label>
+              </div>
+              <div class="choice-row">
+                <input type="radio" id="ef-end-until" name="endType" value="UNTIL">
+                <label for="ef-end-until" class="inline-label">On</label>
+                <input class="input" id="ef-until" name="untilDate" type="date" aria-label="Last date it repeats" aria-describedby="ef-until-err">
+              </div>
+              <p class="field-error" id="ef-until-err" hidden></p>
+              <div class="choice-row">
+                <input type="radio" id="ef-end-count" name="endType" value="COUNT">
+                <label for="ef-end-count" class="inline-label">After</label>
+                <input class="input input-num" id="ef-count" name="count" type="number" inputmode="numeric" min="1" max="999" aria-label="Number of times" aria-describedby="ef-count-err">
+                <span class="inline-label">times</span>
+              </div>
+              <p class="field-error" id="ef-count-err" hidden></p>
+            </fieldset>
+
+            <p class="field-error" id="ef-pattern-err" hidden></p>
+            <p class="repeat-summary" id="ef-repeat-summary" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <fieldset class="field">
+          <legend class="label">Category</legend>
+          <div class="cat-options" id="ef-categories" aria-describedby="ef-category-err"></div>
+          <p class="field-error" id="ef-category-err" hidden></p>
+        </fieldset>
+
+        <div class="field">
+          <label class="label" for="ef-description">Notes <span class="optional">optional</span></label>
+          <textarea class="input textarea" id="ef-description" name="description" rows="3" maxlength="4000"
+                    aria-describedby="ef-description-err" placeholder="Add details, address or reminders to yourself"></textarea>
+          <p class="field-error" id="ef-description-err" hidden></p>
+        </div>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="btn btn-secondary" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" id="ef-save">Save event</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Event details -->
+  <dialog id="event-detail" class="sheet" aria-labelledby="ed-title">
+    <div class="sheet-inner">
+      <header class="sheet-head">
+        <span class="cat-chip" id="ed-cat"></span>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <div class="sheet-body detail-body">
+        <h2 class="detail-title" id="ed-title"></h2>
+        <p class="detail-row"><svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg><span id="ed-when"></span></p>
+        <p class="detail-row" id="ed-repeat" hidden><svg class="icon" aria-hidden="true"><use href="#i-repeat"></use></svg><span><span id="ed-repeat-text"></span><span class="detail-sub" id="ed-repeat-sub" hidden></span></span></p>
+        <p class="detail-desc" id="ed-desc" hidden></p>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="btn btn-danger-ghost" id="ed-delete">
+          <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>Delete
+        </button>
+        <span class="foot-spacer"></span>
+        <button type="button" class="btn btn-secondary" id="ed-goto">Go to day</button>
+        <button type="button" class="btn btn-primary" id="ed-edit">
+          <svg class="icon" aria-hidden="true"><use href="#i-edit"></use></svg>Edit
+        </button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- Delete confirmation -->
+  <dialog id="confirm-delete" class="sheet sheet-sm" role="alertdialog" aria-labelledby="cd-title" aria-describedby="cd-desc">
+    <div class="sheet-inner">
+      <div class="sheet-body confirm-body">
+        <span class="confirm-glyph" aria-hidden="true"><svg class="icon icon-lg"><use href="#i-trash"></use></svg></span>
+        <h2 class="sheet-title" id="cd-title">Delete this event?</h2>
+        <p id="cd-desc"><strong id="cd-name"></strong><br><span id="cd-when"></span><br>
+          <span class="muted">It will be permanently removed from this device.</span></p>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="btn btn-secondary" id="cd-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="cd-confirm">Delete event</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- Scope / impact choice (recurring events) -->
+  <dialog id="choice-dialog" class="sheet sheet-sm" aria-labelledby="ch-title" aria-describedby="ch-desc">
+    <form class="sheet-inner" id="choice-form" method="dialog" novalidate>
+      <div class="sheet-body choice-body">
+        <span class="confirm-glyph" id="ch-glyph" aria-hidden="true"><svg class="icon icon-lg"><use id="ch-glyph-use" href="#i-repeat"></use></svg></span>
+        <h2 class="sheet-title" id="ch-title"></h2>
+        <p id="ch-desc" class="choice-desc"></p>
+        <fieldset class="choice-list" id="ch-options">
+          <legend class="sr-only" id="ch-legend"></legend>
+        </fieldset>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="btn btn-secondary" id="ch-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="ch-confirm">Continue</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Task form (create / edit) -->
+  <dialog id="task-form" class="sheet" aria-labelledby="tf-heading">
+    <form id="task-form-el" class="sheet-inner" novalidate>
+      <header class="sheet-head">
+        <h2 class="sheet-title" id="tf-heading">New task</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <div class="sheet-body">
+        <p class="form-summary" id="tf-summary" role="alert" hidden></p>
+        <p class="form-note" id="tf-status" hidden></p>
+        <div class="field">
+          <label class="label" for="tf-title">Task</label>
+          <input class="input input-lg" id="tf-title" name="title" type="text" maxlength="120" autocomplete="off"
+                 placeholder="e.g. Renew car insurance" aria-describedby="tf-title-err" required>
+          <p class="field-error" id="tf-title-err" hidden></p>
+        </div>
+        <fieldset class="field">
+          <legend class="label">Due date <span class="optional">optional</span></legend>
+          <div class="due-quick" role="group" aria-label="Quick due dates">
+            <button type="button" class="chip-btn" data-due="today" aria-pressed="false">Today</button>
+            <button type="button" class="chip-btn" data-due="tomorrow" aria-pressed="false">Tomorrow</button>
+            <button type="button" class="chip-btn" data-due="none" aria-pressed="true">No date</button>
+          </div>
+          <input class="input" id="tf-due" name="dueDate" type="date" aria-label="Due date" aria-describedby="tf-dueDate-err">
+          <p class="field-error" id="tf-dueDate-err" hidden></p>
+        </fieldset>
+        <fieldset class="field">
+          <legend class="label">Priority</legend>
+          <div class="segmented prio-seg" role="radiogroup" aria-label="Priority" aria-describedby="tf-priority-err">
+            <label><input type="radio" name="priority" value="LOW"><span>Low</span></label>
+            <label><input type="radio" name="priority" value="MEDIUM"><span>Medium</span></label>
+            <label><input type="radio" name="priority" value="HIGH"><span><svg class="icon icon-xs" aria-hidden="true"><use href="#i-flag"></use></svg>High</span></label>
+          </div>
+          <p class="field-error" id="tf-priority-err" hidden></p>
+        </fieldset>
+        <div class="field">
+          <label class="label" for="tf-desc">Notes <span class="optional">optional</span></label>
+          <textarea class="input textarea" id="tf-desc" name="description" rows="3" maxlength="2000"
+                    aria-describedby="tf-description-err" placeholder="Details, links or reminders"></textarea>
+          <p class="field-error" id="tf-description-err" hidden></p>
+        </div>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="btn btn-danger-ghost" id="tf-delete" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>Delete
+        </button>
+        <span class="foot-spacer"></span>
+        <button type="button" class="btn btn-secondary" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" id="tf-save">Save task</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Task delete confirmation -->
+  <dialog id="task-delete" class="sheet sheet-sm" role="alertdialog" aria-labelledby="td-title" aria-describedby="td-desc">
+    <div class="sheet-inner">
+      <div class="sheet-body confirm-body">
+        <span class="confirm-glyph" aria-hidden="true"><svg class="icon icon-lg"><use href="#i-trash"></use></svg></span>
+        <h2 class="sheet-title" id="td-title">Delete this task?</h2>
+        <p id="td-desc"><strong id="td-name"></strong><br><span id="td-meta"></span><br>
+          <span class="muted">It will be permanently removed from this device.</span></p>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="btn btn-secondary" id="td-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="td-confirm">Delete task</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- Restore preview & confirmation -->
+  <dialog id="restore-dialog" class="sheet" aria-labelledby="rd-title" aria-describedby="rd-warning-text">
+    <div class="sheet-inner">
+      <header class="sheet-head">
+        <h2 class="sheet-title" id="rd-title">Restore this backup?</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <div class="sheet-body">
+        <p class="rd-file" id="rd-file"></p>
+        <h3 class="list-label">Backup</h3>
+        <dl class="diag rd-dl" id="rd-info"></dl>
+        <h3 class="list-label">What will be restored</h3>
+        <dl class="diag rd-dl" id="rd-counts"></dl>
+        <ul class="rd-notes" id="rd-notes" hidden></ul>
+        <div class="rd-warning" role="note">
+          <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>
+          <p id="rd-warning-text">Restoring this backup will replace your current JX Calendar events, recurring schedules, tasks and settings. Any changes made after this backup was created will be lost.</p>
+        </div>
+        <p class="rd-current" id="rd-current"></p>
+        <button type="button" class="link-btn rd-save" id="rd-save-current">
+          <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Download a backup of your current data first
+        </button>
+        <label class="rd-confirm" for="rd-check">
+          <input type="checkbox" id="rd-check">
+          <span>I understand that my current events, tasks and settings will be replaced.</span>
+        </label>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="btn btn-secondary" id="rd-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="rd-confirm" disabled>Replace and restore</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <noscript>
+    <div class="noscript">JX Calendar needs JavaScript enabled to run.</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "JX Calendar",
+  "short_name": "JX Calendar",
+  "description": "A private, offline-first calendar. Your data stays on this device.",
+  "id": "./",
+  "start_url": "./#/today",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F6F8F6",
+  "theme_color": "#0F4D3A",
+  "lang": "en",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
